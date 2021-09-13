@@ -6,18 +6,13 @@
 
 #include "cvlib.hpp"
 #include <vector>
-#include <iostream>
 
 struct Quadrotree
 	{
 		std::vector<Quadrotree> childs;
 		bool have_childs;
 		int i1, i2, j1, j2;
-		
-		//Quadrotree(): childs(0), have_childs(false), i1(0), i2(0), j1(0), j2(0)
-		//{
-		//}
-		
+
 		Quadrotree(int i1 = 0, int i2 = 0, int j1 = 0, int j2 = 0): childs(0), have_childs(false), i1(i1), i2(i2), j1(j1), j2(j2)
 		{
 		}
@@ -44,7 +39,6 @@ void split_image(cv::Mat image, double stddev, Quadrotree *tree)
     const auto height = image.rows;
 	
 	
-	//std::cout << tree->childs.size();
 	if ((height != 1) && (width != 1))
 	{
 		tree->have_childs = true;
