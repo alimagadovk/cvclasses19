@@ -77,30 +77,59 @@ void merge_two(cv::Mat image, double stddev, Quadrotree *tree1, Quadrotree *tree
     }
 }
 
-void merge_image(cv::Mat image, double stddev, Quadrotree *tree)
+void merge_image(cv::Mat image, double stddev, Quadrotree *tree, bool by_qtree = 1)
 {
-	while (tree->have_childs)
+	if (by_qtree)
 	{
-		bool check_end = !(tree->childs[0].have_childs | tree->childs[1].have_childs | tree->childs[2].have_childs | tree->childs[3].have_childs);
-		if (check_end)
+		while (tree->have_childs)
 		{
-			merge_two(image, stddev, &(tree->childs[0]), &(tree->childs[1]));
-			merge_two(image, stddev, &(tree->childs[0]), &(tree->childs[2]));
-			merge_two(image, stddev, &(tree->childs[3]), &(tree->childs[1]));
-			merge_two(image, stddev, &(tree->childs[3]), &(tree->childs[2]));
-			tree->have_childs = false;
+			bool check_end = !(tree->childs[0].have_childs | tree->childs[1].have_childs | tree->childs[2].have_childs | tree->childs[3].have_childs);
+			if (check_end)
+			{
+				merge_two(image, stddev, &(tree->childs[0]), &(tree->childs[1]));
+				merge_two(image, stddev, &(tree->childs[0]), &(tree->childs[2]));
+				merge_two(image, stddev, &(tree->childs[3]), &(tree->childs[1]));
+				merge_two(image, stddev, &(tree->childs[3]), &(tree->childs[2]));
+				tree->have_childs = false;
+			}
+			else
+			{
+				merge_image(image, stddev, &(tree->childs[0]));
+				merge_image(image, stddev, &(tree->childs[1]));
+				merge_image(image, stddev, &(tree->childs[2]));
+				merge_image(image, stddev, &(tree->childs[3]));
+			}
 		}
-		else
+	}
+	else
+	{
+		uint8_t meanres;
+		for (int i = 0; i < image.rows-1; i++)
 		{
-			merge_image(image, stddev, &(tree->childs[0]));
-			merge_image(image, stddev, &(tree->childs[1]));
-			merge_image(image, stddev, &(tree->childs[2]));
-			merge_image(image, stddev, &(tree->childs[3]));
+			for (int j = 0; j < image.cols-1; j++)
+			{
+				if (abs(image.at<uint8_t>(i, j) - image.at<uint8_t>(i + 1, j + 1)) <= stddev)
+				{
+					meanres = (image.at<uint8_t>(i, j) + image.at<uint8_t>(i + 1, j + 1)) / 2;
+					image.at<uint8_t>(i, j) = meanres;
+					image.at<uint8_t>(i + 1, j + 1) = meanres;
+				}
+				if (abs(image.at<uint8_t>(i, j) - image.at<uint8_t>(i + 1, j)) <= stddev)
+				{
+					meanres = (image.at<uint8_t>(i, j) + image.at<uint8_t>(i + 1, j)) / 2;
+					image.at<uint8_t>(i, j) = meanres;
+					image.at<uint8_t>(i + 1, j) = meanres;
+				}
+				if (abs(image.at<uint8_t>(i, j) - image.at<uint8_t>(i, j + 1)) <= stddev)
+				{
+					meanres = (image.at<uint8_t>(i, j) + image.at<uint8_t>(i, j + 1)) / 2;
+					image.at<uint8_t>(i, j) = meanres;
+					image.at<uint8_t>(i, j + 1) = meanres;
+				}
+			}
 		}
 	}
 }
-
-
 
 } // namespace
 
