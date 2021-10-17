@@ -57,11 +57,13 @@ int demo_select_texture(int argc, char* argv[])
         cap >> data.image;
 
         cv::cvtColor(data.image, frame_gray, cv::COLOR_BGR2GRAY);
+		frame_gray.convertTo(frame_gray, CV_32FC1);
         const cv::Rect roi = {data.tl, data.br};
         if (roi.area())
         {
             const auto mask = cvlib::select_texture(frame_gray, roi, eps);
             const auto segmented = mask.clone();
+			frame_gray.convertTo(frame_gray, CV_8UC1);
             frame_gray.copyTo(segmented, mask);
             cv::imshow(demo_wnd, segmented);
             cv::rectangle(data.image, data.tl, data.br, cv::Scalar(0, 0, 255));
