@@ -121,7 +121,8 @@ cv::Mat select_texture(const cv::Mat& image, const cv::Rect& roi, double eps)
     cv::Mat imROI = image(roi);
 
 	
-    const int kernel_size = ((std::min(roi.height, roi.width) / 2) % 2 == 0) ? (std::min(roi.height, roi.width) - 1) : std::min(roi.height, roi.width); // \todo round to nearest odd
+    //const int kernel_size = ((std::min(roi.height, roi.width) / 2) % 2 == 0) ? (std::min(roi.height, roi.width) - 1) : std::min(roi.height, roi.width); // \todo round to nearest odd
+	const int kernel_size = 12;
 	static int last_kernel_size;
 	
 	if (last_kernel_size != kernel_size) 
