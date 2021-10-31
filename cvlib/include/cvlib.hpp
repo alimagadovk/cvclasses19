@@ -43,6 +43,8 @@ class motion_segmentation : public cv::BackgroundSubtractor
     void updateBackground(cv::Mat image);
     private:
     double threshold;
+	double k = 2.5;
+	double p = 0.004;
 };
 
 /// \brief FAST corner detection algorithm
