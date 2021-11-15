@@ -100,7 +100,7 @@ void motion_segmentation::apply(cv::InputArray _image, cv::OutputArray _fgmask, 
 		static cv::Mat mean = curr_frame * 0;
 		static cv::Mat dev = curr_frame * 0 + 20.0;
 		static cv::Mat d;
-		k = threshold / 10.0;
+		k = threshold / 20.0;
 		
 		
 		cv::Mat diff, dist, div, F, res;
