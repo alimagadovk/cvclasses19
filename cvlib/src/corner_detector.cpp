@@ -5,7 +5,7 @@
  */
 
 #include "cvlib.hpp"
-
+#include <iostream>
 #include <ctime>
 
 namespace cvlib
@@ -16,15 +16,82 @@ cv::Ptr<corner_detector_fast> corner_detector_fast::create()
     return cv::makePtr<corner_detector_fast>();
 }
 
+bool check_fragment(cv::Mat &fragment)
+{
+	int N = 12;
+	unsigned char threshold = 15;
+	unsigned char I1 = ((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) + (int)threshold < 255) ? fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) + threshold : 255;
+	unsigned char I2 = ((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) - (int)threshold >= 0) ? fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) - threshold : 0;
+	int i_ind[16] = {0, 3, 6, 3, 0, 0, 1, 2, 4, 5, 6, 6, 5, 4, 2, 1};
+	int j_ind[16] = {3, 6, 3, 0, 2, 4, 5, 6, 6, 5, 4, 2, 1, 0, 0, 1};
+	int count1 = 0, count2 = 0;
+	for (int k = 0; k < 4; k++)
+	{
+		if (fragment.at<unsigned char>(i_ind[k], j_ind[k]) > I1)
+		{
+			count1++;
+		}
+		if (fragment.at<unsigned char>(i_ind[k], j_ind[k]) < I2)
+		{
+			count2++;
+		}
+
+	}
+	if ((count1 < 3) && (count2 < 3))
+		return false;
+	for (int k = 4; k < 16; k++)
+	{
+		if (fragment.at<unsigned char>(i_ind[k], j_ind[k]) > I1)
+		{
+			count1++;
+		}
+		if (fragment.at<unsigned char>(i_ind[k], j_ind[k]) < I2)
+		{
+			count2++;
+		}
+	}
+	if (((count1 >= N) && (count2 < N)) || ((count1 < N) && (count2 >= N)))
+		return true;
+	else
+		return false;
+}
+
 void corner_detector_fast::detect(cv::InputArray image, CV_OUT std::vector<cv::KeyPoint>& keypoints, cv::InputArray /*mask = cv::noArray()*/)
 {
-    keypoints.clear();
+	keypoints.clear();
+	cv::Mat curr_frame;
+	image.getMat().copyTo(curr_frame);
+	cv::cvtColor(curr_frame, curr_frame, cv::COLOR_BGR2GRAY);
+	cv::medianBlur(curr_frame,curr_frame,5);
+	
+	int border=3;
+	bool check = false;
+
+	cv::Mat gray_buf(curr_frame.rows + border*2, curr_frame.cols + border*2, curr_frame.depth());
+
+	cv::copyMakeBorder(curr_frame, gray_buf, border, border, border, border, cv::BORDER_REFLECT_101);
+	
+	for (int i = border; i < gray_buf.rows - border; i++)
+	{
+		for (int j = border; j < gray_buf.cols - border; j++)
+		{
+			cv::Mat &fragment = gray_buf(cv::Range(i - border, i + border + 1), cv::Range(j - border, j + border + 1));
+			check = check_fragment(fragment);
+			if (check)
+			{
+				cv::KeyPoint keypoint(j, i, 2*border + 1);
+				keypoints.push_back(keypoint);
+			}
+		}
+	}
+	
+    
     // \todo implement FAST with minimal LOCs(lines of code), but keep code readable.
 }
 
 void corner_detector_fast::compute(cv::InputArray, std::vector<cv::KeyPoint>& keypoints, cv::OutputArray descriptors)
 {
-    std::srand(unsigned(std::time(0))); // \todo remove me
+    //std::srand(unsigned(std::time(0))); // \todo remove me
     // \todo implement any binary descriptor
     const int desc_length = 2;
     descriptors.create(static_cast<int>(keypoints.size()), desc_length, CV_32S);
