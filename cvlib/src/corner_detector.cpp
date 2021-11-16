@@ -19,9 +19,9 @@ cv::Ptr<corner_detector_fast> corner_detector_fast::create()
 bool check_fragment(cv::Mat &fragment)
 {
 	int N = 12;
-	unsigned char threshold = 15;
-	unsigned char I1 = ((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) + (int)threshold < 255) ? fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) + threshold : 255;
-	unsigned char I2 = ((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) - (int)threshold >= 0) ? fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) - threshold : 0;
+	int threshold = 40;
+	unsigned char I1 = std::min((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) + threshold, 255);
+	unsigned char I2 = std::max((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) - threshold, 0);
 	int i_ind[16] = {0, 3, 6, 3, 0, 0, 1, 2, 4, 5, 6, 6, 5, 4, 2, 1};
 	int j_ind[16] = {3, 6, 3, 0, 2, 4, 5, 6, 6, 5, 4, 2, 1, 0, 0, 1};
 	int count1 = 0, count2 = 0;
@@ -35,7 +35,6 @@ bool check_fragment(cv::Mat &fragment)
 		{
 			count2++;
 		}
-
 	}
 	if ((count1 < 3) && (count2 < 3))
 		return false;
@@ -50,7 +49,7 @@ bool check_fragment(cv::Mat &fragment)
 			count2++;
 		}
 	}
-	if (((count1 >= N) && (count2 < N)) || ((count1 < N) && (count2 >= N)))
+	if (((count1 >= N) && (count2 < N)) ^ ((count1 < N) && (count2 >= N)))
 		return true;
 	else
 		return false;
@@ -62,30 +61,23 @@ void corner_detector_fast::detect(cv::InputArray image, CV_OUT std::vector<cv::K
 	cv::Mat curr_frame;
 	image.getMat().copyTo(curr_frame);
 	cv::cvtColor(curr_frame, curr_frame, cv::COLOR_BGR2GRAY);
-	cv::medianBlur(curr_frame,curr_frame,5);
+	cv::medianBlur(curr_frame,curr_frame,3);
 	
 	int border=3;
-	bool check = false;
 
-	cv::Mat gray_buf(curr_frame.rows + border*2, curr_frame.cols + border*2, curr_frame.depth());
-
-	cv::copyMakeBorder(curr_frame, gray_buf, border, border, border, border, cv::BORDER_REFLECT_101);
+	cv::copyMakeBorder(curr_frame, curr_frame, border, border, border, border, cv::BORDER_REFLECT_101);
 	
-	for (int i = border; i < gray_buf.rows - border; i++)
+	for (int i = border; i < curr_frame.rows - border; i++)
 	{
-		for (int j = border; j < gray_buf.cols - border; j++)
+		for (int j = border; j < curr_frame.cols - border; j++)
 		{
-			cv::Mat &fragment = gray_buf(cv::Range(i - border, i + border + 1), cv::Range(j - border, j + border + 1));
-			check = check_fragment(fragment);
-			if (check)
+			cv::Mat &fragment = curr_frame(cv::Range(i - border, i + border + 1), cv::Range(j - border, j + border + 1));
+			if (check_fragment(fragment))
 			{
-				cv::KeyPoint keypoint(j, i, 2*border + 1);
-				keypoints.push_back(keypoint);
+				keypoints.push_back(cv::KeyPoint(j, i, 2*border + 1));
 			}
 		}
 	}
-	
-    
     // \todo implement FAST with minimal LOCs(lines of code), but keep code readable.
 }
 
