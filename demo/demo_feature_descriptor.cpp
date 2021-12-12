@@ -6,7 +6,7 @@
 
 #include <cvlib.hpp>
 #include <opencv2/opencv.hpp>
-
+#include <sstream>
 #include "utils.hpp"
 
 int demo_feature_descriptor(int argc, char* argv[])
@@ -26,19 +26,25 @@ int demo_feature_descriptor(int argc, char* argv[])
     auto detector_b = cv::KAZE::create();
     std::vector<cv::KeyPoint> corners;
     cv::Mat descriptors;
-
+	
     utils::fps_counter fps;
+	std::ostringstream convert;
     int pressed_key = 0;
     while (pressed_key != 27) // ESC
     {
         cap >> frame;
         cv::imshow(main_wnd, frame);
 
-        detector_b->detect(frame, corners); // \todo use your detector (detector_b)
+        detector_a->detect(frame, corners); // \todo use your detector (detector_b)
         cv::drawKeypoints(frame, corners, frame, cv::Scalar(0, 0, 255));
 
         utils::put_fps_text(frame, fps);
         // \todo add count of the detected corners at the top left corner of the image. Use green text color.
+		convert.str("");
+		convert << corners.size() << " corners were found";
+		cv::putText(frame, convert.str().c_str(), cv::Point( 10, 25 ), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 150, 0));
+        cv::imshow(demo_wnd, frame);
+		
         cv::imshow(demo_wnd, frame);
 
         pressed_key = cv::waitKey(30);
@@ -48,14 +54,14 @@ int demo_feature_descriptor(int argc, char* argv[])
             cv::FileStorage file("descriptor.json", cv::FileStorage::WRITE | cv::FileStorage::FORMAT_JSON);
 
             detector_a->compute(frame, corners, descriptors);
-            file << detector_a->getDefaultName() << descriptors;
+            file << "My descriptor" << descriptors;
 
             detector_b->compute(frame, corners, descriptors);
-            file << "detector_b" << descriptors;
+            file << "KAZE" << descriptors;
 
             std::cout << "Dump descriptors complete! \n";
         }
-
+		
         std::cout << "Feature points: " << corners.size() << "\r";
     }
 
