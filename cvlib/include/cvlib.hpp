@@ -86,7 +86,7 @@ class descriptor_matcher : public cv::DescriptorMatcher
         ratio_ = r;
     }
 
-    public:
+    protected:
     /// \see cv::DescriptorMatcher::knnMatchImpl
     virtual void knnMatchImpl(cv::InputArray queryDescriptors, std::vector<std::vector<cv::DMatch>>& matches, int k,
                               cv::InputArrayOfArrays masks = cv::noArray(), bool compactResult = false) override;
@@ -119,7 +119,13 @@ class descriptor_matcher : public cv::DescriptorMatcher
 /// \brief Stitcher for merging images into big one
 class Stitcher
 {
-    /// \todo design and implement
+	public:
+	static cv::Ptr<Stitcher> create()
+    {
+		return cv::makePtr<Stitcher>();
+    }
+	
+	cv::Mat Stiched(cv::Mat img1, cv::Mat img2);
 };
 } // namespace cvlib
 
