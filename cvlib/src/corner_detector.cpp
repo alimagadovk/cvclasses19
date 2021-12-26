@@ -17,10 +17,9 @@ cv::Ptr<corner_detector_fast> corner_detector_fast::create()
     return cv::makePtr<corner_detector_fast>();
 }
 
-bool check_fragment(cv::Mat &fragment)
+bool check_fragment(cv::Mat &fragment, int threshold = 40)
 {
 	int N = 12;
-	int threshold = 40;
 	unsigned char I1 = std::min((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) + threshold, 255);
 	unsigned char I2 = std::max((int)fragment.at<unsigned char>(fragment.rows / 2, fragment.cols / 2) - threshold, 0);
 	int i_ind[16] = {0, 3, 6, 3, 0, 0, 1, 2, 4, 5, 6, 6, 5, 4, 2, 1};
@@ -73,7 +72,7 @@ void corner_detector_fast::detect(cv::InputArray image, CV_OUT std::vector<cv::K
 		for (int j = border; j < curr_frame.cols - border; j++)
 		{
 			cv::Mat &fragment = curr_frame(cv::Range(i - border, i + border + 1), cv::Range(j - border, j + border + 1));
-			if (check_fragment(fragment))
+			if (check_fragment(fragment, this->thresh))
 			{
 				keypoints.push_back(cv::KeyPoint(j - border, i - border, 2*border + 1, 0, 0, 0, 3));
 			}
@@ -154,7 +153,7 @@ void corner_detector_fast::compute(cv::InputArray image, std::vector<cv::KeyPoin
         {
 			unsigned char x = curr_frame.at<unsigned char>(new_keypoints[i].pt.x + pairs[2 * j].first, new_keypoints[i].pt.y + pairs[2 * j].second);
 			unsigned char y = curr_frame.at<unsigned char>(new_keypoints[i].pt.x + pairs[2 * j + 1].first, new_keypoints[i].pt.y + pairs[2 * j + 1].second);
-            desc_mat.at<uint>(i, j) = int(x < y);
+            desc_mat.at<int>(i, j) = int(x < y);
         }
     }
 }

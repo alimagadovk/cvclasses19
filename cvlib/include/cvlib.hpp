@@ -53,7 +53,7 @@ class corner_detector_fast : public cv::Feature2D
     public:
     /// \brief Fabrique method for creating FAST detector
     static cv::Ptr<corner_detector_fast> create();
-
+	int thresh = 40;
     /// \see Feature2d::detect
     virtual void detect(cv::InputArray image, CV_OUT std::vector<cv::KeyPoint>& keypoints, cv::InputArray mask = cv::noArray()) override;
 
@@ -86,7 +86,7 @@ class descriptor_matcher : public cv::DescriptorMatcher
         ratio_ = r;
     }
 
-    protected:
+    public:
     /// \see cv::DescriptorMatcher::knnMatchImpl
     virtual void knnMatchImpl(cv::InputArray queryDescriptors, std::vector<std::vector<cv::DMatch>>& matches, int k,
                               cv::InputArrayOfArrays masks = cv::noArray(), bool compactResult = false) override;
